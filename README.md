@@ -49,3 +49,21 @@ Install dependencies: `npm install`
 Run the dev server: `npm run start`
 
 Build production: `npm run build`
+
+## Train
+
+### Dependencies
+
+Python: https://www.python.org/downloads/
+
+OpenCV: `pip install opencv-python`
+
+### Capture photos
+
+To take training photos, move to the training directory: `cd training`
+
+Then, launch the Python program: `python camera.py`
+
+With this program running, hit the 'r' key to take right tongue photos, the 'l' key to take left tongue photos, the 'n' key to take no tongue photos, and the 'q' key to quit the program.
+
+Images will be saved to their respective folders.
