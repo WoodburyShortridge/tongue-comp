@@ -1,6 +1,8 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 'use strict';
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 require('@babel/polyfill');
 
 var _mobilenet = require('@tensorflow-models/mobilenet');
@@ -17,12 +19,216 @@ var knnClassifier = _interopRequireWildcard(_knnClassifier);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 // Number of classes to classify
 var NUM_CLASSES = 3;
 // Webcam Image size. Must be 227.
 var IMAGE_SIZE = 227;
 // K value for KNN
 var TOPK = 10;
+
+var Main = function () {
+  function Main() {
+    var _this = this;
+
+    _classCallCheck(this, Main);
+
+    // Initiate variables
+    this.infoTexts = [];
+    this.videoPlaying = false;
+
+    // Initiate deeplearn.js math and knn classifier objects
+    this.bindPage();
+
+    // Create video element that will contain the webcam image
+    this.video = document.createElement('video');
+    this.video.setAttribute('autoplay', '');
+    this.video.setAttribute('playsinline', '');
+
+    // Add video element to DOM
+    document.body.appendChild(this.video);
+
+    // Create training buttons and info texts
+    for (var i = 0; i < NUM_CLASSES; i++) {
+      var div = document.createElement('div');
+      document.body.appendChild(div);
+      div.style.marginBottom = '10px';
+
+      // Create info text
+      var infoText = document.createElement('span');
+      infoText.innerText = " No examples added";
+      div.appendChild(infoText);
+      this.infoTexts.push(infoText);
+    }
+
+    // Setup webcam
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(function (stream) {
+      _this.video.srcObject = stream;
+      _this.video.width = IMAGE_SIZE;
+      _this.video.height = IMAGE_SIZE;
+
+      _this.video.addEventListener('playing', function () {
+        return _this.videoPlaying = true;
+      });
+      _this.video.addEventListener('paused', function () {
+        return _this.videoPlaying = false;
+      });
+    });
+  }
+
+  _createClass(Main, [{
+    key: 'bindPage',
+    value: function bindPage() {
+      var _this2 = this;
+
+      var _loop, i;
+
+      return regeneratorRuntime.async(function bindPage$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              this.knn = knnClassifier.create();
+              _context.next = 3;
+              return regeneratorRuntime.awrap(mobilenetModule.load());
+
+            case 3:
+              this.mobilenet = _context.sent;
+
+              _loop = function _loop(i) {
+                var image = new Image();
+                if (i === 0) {
+                  image.src = 'images/LEFT.png';
+                } else if (i === 1) {
+                  image.src = 'images/RIGHT.png';
+                } else {
+                  image.src = 'images/NONE.png';
+                }
+                image.width = IMAGE_SIZE;
+                image.height = IMAGE_SIZE;
+
+                image.addEventListener('load', function () {
+                  document.body.appendChild(image);
+                  var imageTf = tf.fromPixels(image);
+                  var infer = function infer() {
+                    return _this2.mobilenet.infer(imageTf, 'conv_preds');
+                  };
+                  // Train class if one of the buttons is held down
+                  var logits = infer();
+                  // Add current image to classifier
+                  _this2.knn.addExample(logits, i);
+
+                  // Dispose image when done
+                  imageTf.dispose();
+                  if (logits != null) {
+                    logits.dispose();
+                  }
+                }, false);
+              };
+
+              // Get image data from video element
+              for (i = 0; i < NUM_CLASSES; i++) {
+                _loop(i);
+              };
+              this.start();
+
+            case 8:
+            case 'end':
+              return _context.stop();
+          }
+        }
+      }, null, this);
+    }
+  }, {
+    key: 'start',
+    value: function start() {
+      if (this.timer) {
+        this.stop();
+      }
+      this.video.play();
+      this.timer = requestAnimationFrame(this.animate.bind(this));
+    }
+  }, {
+    key: 'stop',
+    value: function stop() {
+      this.video.pause();
+      cancelAnimationFrame(this.timer);
+    }
+  }, {
+    key: 'animate',
+    value: function animate() {
+      var _this3 = this;
+
+      var numClasses, _image, infer, logits, res, _i, exampleCount;
+
+      return regeneratorRuntime.async(function animate$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              if (!this.videoPlaying) {
+                _context2.next = 10;
+                break;
+              }
+
+              numClasses = this.knn.getNumClasses();
+
+              if (!(numClasses > 0)) {
+                _context2.next = 10;
+                break;
+              }
+
+              // If classes have been added run predict
+              _image = tf.fromPixels(this.video);
+
+              infer = function infer() {
+                return _this3.mobilenet.infer(_image, 'conv_preds');
+              };
+
+              logits = infer();
+              _context2.next = 8;
+              return regeneratorRuntime.awrap(this.knn.predictClass(logits, TOPK));
+
+            case 8:
+              res = _context2.sent;
+
+
+              for (_i = 0; _i < NUM_CLASSES; _i++) {
+
+                // The number of examples for each class
+                exampleCount = this.knn.getClassExampleCount();
+
+                // Make the predicted class bold
+
+                if (res.classIndex == _i) {
+                  this.infoTexts[_i].style.fontWeight = 'bold';
+                } else {
+                  this.infoTexts[_i].style.fontWeight = 'normal';
+                }
+
+                // Update info text
+                if (exampleCount[_i] > 0) {
+                  this.infoTexts[_i].innerText = ' ' + exampleCount[_i] + ' examples - ' + res.confidences[_i] * 100 + '%';
+                }
+              }
+
+            case 10:
+              this.timer = requestAnimationFrame(this.animate.bind(this));
+
+            case 11:
+            case 'end':
+              return _context2.stop();
+          }
+        }
+      }, null, this);
+    }
+  }]);
+
+  return Main;
+}();
+
+window.addEventListener('load', function () {
+  return new Main();
+});
 
 },{"@babel/polyfill":2,"@tensorflow-models/knn-classifier":10,"@tensorflow-models/mobilenet":13,"@tensorflow/tfjs":265}],2:[function(require,module,exports){
 (function (global){
