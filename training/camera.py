@@ -26,7 +26,7 @@ cap = cv2.VideoCapture(0)
 while(True):
     ret, frame = cap.read()
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
-    image = cv2.resize(rgb,(int(277),int(277)))
+    image = cv2.resize(rgb,(int(227),int(227)))
     cv2.imshow('image', image)
     c = cv2.waitKey(1)
     if c == ord('r'):
