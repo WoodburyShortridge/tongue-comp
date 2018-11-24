@@ -10,7 +10,7 @@ We propose a new, hardware-independent, approach to tongue-computer interaction.
 
 ### Prototype:
 
-![protoype image](protoype.png)
+![protoype image](https://raw.githubusercontent.com/WoodburyShortridge/tongue-comp/master/prototype.png)
 
 ## Technologies
 
