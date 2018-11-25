@@ -67,3 +67,5 @@ Then, launch the Python program: `python camera.py`
 With this program running, hit the 'r' key to take right tongue photos, the 'l' key to take left tongue photos, the 'n' key to take no tongue photos, and the 'q' key to quit the program.
 
 Images will be saved to their respective folders.
+
+To add new images to the json used to train the app, run `python data.py`

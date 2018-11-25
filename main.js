@@ -36,7 +36,7 @@ class Main {
 
       // Create info text
       const infoText = document.createElement('span')
-      infoText.innerText = " No examples added";
+      infoText.innerText = "Data loading...";
       div.appendChild(infoText);
       this.infoTexts.push(infoText);
     }
@@ -53,73 +53,38 @@ class Main {
       })
   }
 
+  loadData(dataClass, tfNum) {
+    for (let i = 0; i < dataClass.length; i++) {
+      let image = new Image();
+      image.src = 'training/' + dataClass[i];
+      image.width = IMAGE_SIZE;
+      image.height = IMAGE_SIZE;
+
+      image.addEventListener('load', () => {
+        // document.body.appendChild(image);
+        let imageTf = tf.fromPixels(image);
+        let infer = () => this.mobilenet.infer(imageTf, 'conv_preds');
+        let logits = infer();
+        // Add current image to classifier
+        this.knn.addExample(logits, tfNum)
+
+        // Dispose image when done
+        imageTf.dispose();
+        if (logits != null) {
+          logits.dispose();
+        }
+      }, false);
+    };
+  }
+
   async bindPage() {
     this.knn = knnClassifier.create();
     this.mobilenet = await mobilenetModule.load();
 
-    for (let i = 0; i < data.right.length; i++) {
-      let image = new Image();
-      image.src = 'training/' + data.right[i];
-      image.width = IMAGE_SIZE;
-      image.height = IMAGE_SIZE;
+    this.loadData(data.right, 0);
+    this.loadData(data.left, 1);
+    this.loadData(data.none, 2)
 
-      image.addEventListener('load', () => {
-        document.body.appendChild(image);
-        let imageTf = tf.fromPixels(image);
-        let infer = () => this.mobilenet.infer(imageTf, 'conv_preds');
-        let logits = infer();
-        // Add current image to classifier
-        this.knn.addExample(logits, 0)
-
-        // Dispose image when done
-        imageTf.dispose();
-        if (logits != null) {
-          logits.dispose();
-        }
-      }, false);
-    };
-    for (let i = 0; i < data.left.length; i++) {
-      let image = new Image();
-      image.src = 'training/' + data.left[i];
-      image.width = IMAGE_SIZE;
-      image.height = IMAGE_SIZE;
-
-      image.addEventListener('load', () => {
-        document.body.appendChild(image);
-        let imageTf = tf.fromPixels(image);
-        let infer = () => this.mobilenet.infer(imageTf, 'conv_preds');
-        let logits = infer();
-        // Add current image to classifier
-        this.knn.addExample(logits, 1)
-
-        // Dispose image when done
-        imageTf.dispose();
-        if (logits != null) {
-          logits.dispose();
-        }
-      }, false);
-    };
-    for (let i = 0; i < data.none.length; i++) {
-      let image = new Image();
-      image.src = 'training/' + data.none[i];
-      image.width = IMAGE_SIZE;
-      image.height = IMAGE_SIZE;
-
-      image.addEventListener('load', () => {
-        document.body.appendChild(image);
-        let imageTf = tf.fromPixels(image);
-        let infer = () => this.mobilenet.infer(imageTf, 'conv_preds');
-        let logits = infer();
-        // Add current image to classifier
-        this.knn.addExample(logits, 2)
-
-        // Dispose image when done
-        imageTf.dispose();
-        if (logits != null) {
-          logits.dispose();
-        }
-      }, false);
-    };
     this.start();
   }
 
@@ -151,9 +116,9 @@ class Main {
         for (let i = 0; i < NUM_CLASSES; i++) {
 
           // The number of examples for each class
-          const exampleCount = this.knn.getClassExampleCount();
+          const count = this.knn.getClassExampleCount();
 
-          // Make the predicted class bold
+          // Make the most predicted class bold
           if (res.classIndex == i) {
             this.infoTexts[i].style.fontWeight = 'bold';
           } else {
@@ -161,8 +126,16 @@ class Main {
           }
 
           // Update info text
-          if (exampleCount[i] > 0) {
-            this.infoTexts[i].innerText = ` ${exampleCount[i]} examples - ${res.confidences[i] * 100}%`
+          if (count[i] > 0) {
+            if (i === 0) {
+              this.infoTexts[i].innerText = `RIGHT: ${count[i]} data loaded - ${res.confidences[i] * 100}%`
+            }
+            if (i === 1) {
+              this.infoTexts[i].innerText = `LEFT: ${count[i]} data loaded - ${res.confidences[i] * 100}%`
+            }
+            if (i === 2) {
+              this.infoTexts[i].innerText = `NONE: ${count[i]} data loaded - ${res.confidences[i] * 100}%`
+            }
           }
         }
       }
