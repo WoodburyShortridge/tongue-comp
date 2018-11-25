@@ -30,13 +30,19 @@ while(True):
     cv2.imshow('image', image)
     c = cv2.waitKey(1)
     if c == ord('r'):
-        out = cv2.imwrite('right/right_' + datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S") + '.jpg', image)
+#    if c == ord('d'):
+        # Windows can't write colons in file names
+        out = cv2.imwrite('./right/right_' + datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S") + '.jpg', image)
+        print(out)
     if c == ord('l'):
-        out = cv2.imwrite('left/left_' + datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S") + '.jpg', image)
+#    if c == ord('i'):
+        out = cv2.imwrite('./left/left_' + datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S") + '.jpg', image)
+        print(out)
     if c == ord('n'):
-        out = cv2.imwrite('none/none_' + datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S") + '.jpg', image)
+        out = cv2.imwrite('./none/none_' + datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S") + '.jpg', image)
+        print(out)
     if c == ord('q'):
-        break;
+        break
 
 cap.release()
 cv2.destroyAllWindows()
