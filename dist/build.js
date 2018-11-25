@@ -53,13 +53,12 @@ var Main = function () {
     // Add video element to DOM
     document.body.appendChild(this.video);
 
-    // Create training buttons and info texts
+    // Create info texts
     for (var i = 0; i < NUM_CLASSES; i++) {
       var div = document.createElement('div');
       document.body.appendChild(div);
       div.style.marginBottom = '10px';
 
-      // Create info text
       var infoText = document.createElement('span');
       infoText.innerText = "Data loading...";
       div.appendChild(infoText);
@@ -80,6 +79,9 @@ var Main = function () {
       });
     });
   }
+
+  // reusable method to load img data
+
 
   _createClass(Main, [{
     key: 'loadData',
@@ -114,6 +116,9 @@ var Main = function () {
         _loop(i);
       };
     }
+
+    // async method called from constructor to create classifier, load mobilenet, and data
+
   }, {
     key: 'bindPage',
     value: function bindPage() {
@@ -157,6 +162,9 @@ var Main = function () {
       this.video.pause();
       cancelAnimationFrame(this.timer);
     }
+
+    // paint routine
+
   }, {
     key: 'animate',
     value: function animate() {
