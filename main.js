@@ -28,13 +28,12 @@ class Main {
     // Add video element to DOM
     document.body.appendChild(this.video);
 
-    // Create training buttons and info texts
+    // Create info texts
     for (let i = 0; i < NUM_CLASSES; i++) {
       const div = document.createElement('div');
       document.body.appendChild(div);
       div.style.marginBottom = '10px';
 
-      // Create info text
       const infoText = document.createElement('span')
       infoText.innerText = "Data loading...";
       div.appendChild(infoText);
@@ -53,6 +52,7 @@ class Main {
       })
   }
 
+  // reusable method to load img data
   loadData(dataClass, tfNum) {
     for (let i = 0; i < dataClass.length; i++) {
       let image = new Image();
@@ -77,6 +77,7 @@ class Main {
     };
   }
 
+  // async method called from constructor to create classifier, load mobilenet, and data
   async bindPage() {
     this.knn = knnClassifier.create();
     this.mobilenet = await mobilenetModule.load();
@@ -101,6 +102,7 @@ class Main {
     cancelAnimationFrame(this.timer);
   }
 
+  // paint routine
   async animate() {
     if (this.videoPlaying) {
 
