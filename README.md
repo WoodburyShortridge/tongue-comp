@@ -1,5 +1,7 @@
 # Tongue-computer Interface for the browser
 
+This project is for Prof. Jacob's OOP class focusing on non-WIMP("windows, icons, menus, pointer") user interfaces, by Woodbury Shortridge (woodbury.shortridge@tufts.edu) and Jose Lemus (Jose.Lemus@tufts.edu). We worked in collaboration on both the concept and the feasibility testing.
+
 ## Premise
 
 Tongue-computer interfaces are not new, there are many explorations in HCI research using various embedded sensor methods such as infrared, microphones, intraoral electrode arrays or even glossokinetic potential. And, it’s not only fun and games: tongue-computer interfaces can enable severely disabled users such as those with upper body impairments. From browsing the web to flying a drone, the tongue’s dynamic mobility offers wide potential for interaction design.
