@@ -17,6 +17,10 @@ var _knnClassifier = require('@tensorflow-models/knn-classifier');
 
 var knnClassifier = _interopRequireWildcard(_knnClassifier);
 
+var _data = require('./training/data.json');
+
+var data = _interopRequireWildcard(_data);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -49,15 +53,14 @@ var Main = function () {
     // Add video element to DOM
     document.body.appendChild(this.video);
 
-    // Create training buttons and info texts
+    // Create info texts
     for (var i = 0; i < NUM_CLASSES; i++) {
       var div = document.createElement('div');
       document.body.appendChild(div);
       div.style.marginBottom = '10px';
 
-      // Create info text
       var infoText = document.createElement('span');
-      infoText.innerText = " No examples added";
+      infoText.innerText = "Data loading...";
       div.appendChild(infoText);
       this.infoTexts.push(infoText);
     }
@@ -77,13 +80,48 @@ var Main = function () {
     });
   }
 
+  // reusable method to load img data
+
+
   _createClass(Main, [{
-    key: 'bindPage',
-    value: function bindPage() {
+    key: 'loadData',
+    value: function loadData(dataClass, tfNum) {
       var _this2 = this;
 
-      var _loop, i;
+      var _loop = function _loop(i) {
+        var image = new Image();
+        image.src = 'training/' + dataClass[i];
+        image.width = IMAGE_SIZE;
+        image.height = IMAGE_SIZE;
 
+        image.addEventListener('load', function () {
+          // document.body.appendChild(image);
+          var imageTf = tf.fromPixels(image);
+          var infer = function infer() {
+            return _this2.mobilenet.infer(imageTf, 'conv_preds');
+          };
+          var logits = infer();
+          // Add current image to classifier
+          _this2.knn.addExample(logits, tfNum);
+
+          // Dispose image when done
+          imageTf.dispose();
+          if (logits != null) {
+            logits.dispose();
+          }
+        }, false);
+      };
+
+      for (var i = 0; i < dataClass.length; i++) {
+        _loop(i);
+      };
+    }
+
+    // async method called from constructor to create classifier, load mobilenet, and data
+
+  }, {
+    key: 'bindPage',
+    value: function bindPage() {
       return regeneratorRuntime.async(function bindPage$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -95,41 +133,11 @@ var Main = function () {
             case 3:
               this.mobilenet = _context.sent;
 
-              _loop = function _loop(i) {
-                var image = new Image();
-                if (i === 0) {
-                  image.src = 'images/LEFT.png';
-                } else if (i === 1) {
-                  image.src = 'images/RIGHT.png';
-                } else {
-                  image.src = 'images/NONE.png';
-                }
-                image.width = IMAGE_SIZE;
-                image.height = IMAGE_SIZE;
 
-                image.addEventListener('load', function () {
-                  document.body.appendChild(image);
-                  var imageTf = tf.fromPixels(image);
-                  var infer = function infer() {
-                    return _this2.mobilenet.infer(imageTf, 'conv_preds');
-                  };
-                  // Train class if one of the buttons is held down
-                  var logits = infer();
-                  // Add current image to classifier
-                  _this2.knn.addExample(logits, i);
+              this.loadData(data.right, 0);
+              this.loadData(data.left, 1);
+              this.loadData(data.none, 2);
 
-                  // Dispose image when done
-                  imageTf.dispose();
-                  if (logits != null) {
-                    logits.dispose();
-                  }
-                }, false);
-              };
-
-              // Get image data from video element
-              for (i = 0; i < NUM_CLASSES; i++) {
-                _loop(i);
-              };
               this.start();
 
             case 8:
@@ -154,12 +162,15 @@ var Main = function () {
       this.video.pause();
       cancelAnimationFrame(this.timer);
     }
+
+    // paint routine
+
   }, {
     key: 'animate',
     value: function animate() {
       var _this3 = this;
 
-      var numClasses, _image, infer, logits, res, _i, exampleCount;
+      var numClasses, _image, infer, logits, res, i, count;
 
       return regeneratorRuntime.async(function animate$(_context2) {
         while (1) {
@@ -192,22 +203,30 @@ var Main = function () {
               res = _context2.sent;
 
 
-              for (_i = 0; _i < NUM_CLASSES; _i++) {
+              for (i = 0; i < NUM_CLASSES; i++) {
 
                 // The number of examples for each class
-                exampleCount = this.knn.getClassExampleCount();
+                count = this.knn.getClassExampleCount();
 
-                // Make the predicted class bold
+                // Make the most predicted class bold
 
-                if (res.classIndex == _i) {
-                  this.infoTexts[_i].style.fontWeight = 'bold';
+                if (res.classIndex == i) {
+                  this.infoTexts[i].style.fontWeight = 'bold';
                 } else {
-                  this.infoTexts[_i].style.fontWeight = 'normal';
+                  this.infoTexts[i].style.fontWeight = 'normal';
                 }
 
                 // Update info text
-                if (exampleCount[_i] > 0) {
-                  this.infoTexts[_i].innerText = ' ' + exampleCount[_i] + ' examples - ' + res.confidences[_i] * 100 + '%';
+                if (count[i] > 0) {
+                  if (i === 0) {
+                    this.infoTexts[i].innerText = 'RIGHT: ' + count[i] + ' data loaded - ' + res.confidences[i] * 100 + '%';
+                  }
+                  if (i === 1) {
+                    this.infoTexts[i].innerText = 'LEFT: ' + count[i] + ' data loaded - ' + res.confidences[i] * 100 + '%';
+                  }
+                  if (i === 2) {
+                    this.infoTexts[i].innerText = 'NONE: ' + count[i] + ' data loaded - ' + res.confidences[i] * 100 + '%';
+                  }
                 }
               }
 
@@ -230,7 +249,7 @@ window.addEventListener('load', function () {
   return new Main();
 });
 
-},{"@babel/polyfill":2,"@tensorflow-models/knn-classifier":10,"@tensorflow-models/mobilenet":13,"@tensorflow/tfjs":265}],2:[function(require,module,exports){
+},{"./training/data.json":567,"@babel/polyfill":2,"@tensorflow-models/knn-classifier":10,"@tensorflow-models/mobilenet":13,"@tensorflow/tfjs":265}],2:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -52606,4 +52625,6 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":545,"timers":566}]},{},[1]);
+},{"process/browser.js":545,"timers":566}],567:[function(require,module,exports){
+module.exports={"right": ["right/right_2018-11-24-20:50:21.jpg", "right/right_2018-11-24-20:50:34.jpg", "right/right_2018-11-24-21:06:39.jpg", "right/right_2018-11-24-20:50:36.jpg", "right/right_2018-11-24-20:50:23.jpg", "right/right_2018-11-24-20:50:37.jpg", "right/right_2018-11-24-21:06:38.jpg", "right/right_2018-11-24-21:06:28.jpg", "right/right_2018-11-24-21:08:05.jpg", "right/right_2018-11-24-20:50:33.jpg", "right/right_2018-11-24-20:50:32.jpg", "right/right_2018-11-24-21:08:10.jpg", "right/right_2018-11-24-21:08:04.jpg", "right/right_2018-11-24-21:06:29.jpg", "right/right_2018-11-24-21:08:06.jpg", "right/right_2018-11-24-20:50:30.jpg", "right/right_2018-11-24-20:29:40.jpg", "right/right_2018-11-24-20:29:41.jpg", "right/right_2018-11-24-20:50:31.jpg", "right/right_2018-11-24-21:08:07.jpg", "right/right_2018-11-24-20:51:02.jpg", "right/right_2018-11-24-20:50:56.jpg", "right/right_2018-11-24-20:29:26.jpg", "right/right_2018-11-24-20:29:32.jpg", "right/right_2018-11-24-21:07:31.jpg", "right/right_2018-11-24-21:07:30.jpg", "right/right_2018-11-24-20:29:33.jpg", "right/right_2018-11-24-20:29:27.jpg", "right/right_2018-11-24-20:50:57.jpg", "right/right_2018-11-24-20:51:03.jpg", "right/right_2018-11-24-20:50:41.jpg", "right/right_2018-11-24-20:29:31.jpg", "right/right_2018-11-24-20:29:25.jpg", "right/right_2018-11-24-20:29:19.jpg", "right/right_2018-11-24-21:07:32.jpg", "right/right_2018-11-24-21:07:33.jpg", "right/right_2018-11-24-21:07:27.jpg", "right/right_2018-11-24-20:29:18.jpg", "right/right_2018-11-24-20:29:24.jpg", "right/right_2018-11-24-20:29:30.jpg", "right/right_2018-11-24-20:50:40.jpg", "right/right_2018-11-24-20:50:54.jpg", "right/right_2018-11-24-20:51:00.jpg", "right/right_2018-11-24-20:50:50.jpg", "right/right_2018-11-24-20:50:44.jpg", "right/right_2018-11-24-20:29:34.jpg", "right/right_2018-11-24-20:29:20.jpg", "right/right_2018-11-24-20:29:21.jpg", "right/right_2018-11-24-20:29:35.jpg", "right/right_2018-11-24-20:51:05.jpg", "right/right_2018-11-24-20:51:07.jpg", "right/right_2018-11-24-21:06:48.jpg", "right/right_2018-11-24-20:50:47.jpg", "right/right_2018-11-24-20:29:23.jpg", "right/right_2018-11-24-20:29:37.jpg", "right/right_2018-11-24-21:07:08.jpg", "right/right_2018-11-24-21:07:34.jpg", "right/right_2018-11-24-20:29:36.jpg", "right/right_2018-11-24-20:29:22.jpg", "right/right_2018-11-24-20:50:52.jpg", "right/right_2018-11-24-20:50:46.jpg", "right/right_2018-11-24-21:06:49.jpg", "right/right_2018-11-24-20:51:06.jpg", "right/right_2018-11-24-21:06:44.jpg", "right/right_2018-11-24-20:29:13.jpg", "right/right_2018-11-24-21:07:04.jpg", "right/right_2018-11-24-21:07:05.jpg", "right/right_2018-11-24-21:06:47.jpg", "right/right_2018-11-24-20:29:38.jpg", "right/right_2018-11-24-21:07:07.jpg", "right/right_2018-11-24-21:07:06.jpg", "right/right_2018-11-24-20:29:39.jpg", "right/right_2018-11-24-21:06:46.jpg", "right/right_2018-11-24-21:06:42.jpg", "right/right_2018-11-24-20:29:29.jpg", "right/right_2018-11-24-21:07:03.jpg", "right/right_2018-11-24-20:29:14.jpg", "right/right_2018-11-24-20:29:28.jpg", "right/right_2018-11-24-20:50:58.jpg", "right/right_2018-11-24-21:06:41.jpg", "right/right_2018-11-24-20:29:16.jpg", "right/right_2018-11-24-21:07:29.jpg", "right/right_2018-11-24-21:07:28.jpg", "right/right_2018-11-24-21:06:40.jpg", "right/right_2018-11-24-21:08:22.jpg", "right/right_2018-11-24-21:06:27.jpg", "right/right_2018-11-24-21:08:23.jpg", "right/right_2018-11-24-21:08:21.jpg", "right/right_2018-11-24-21:08:09.jpg", "right/right_2018-11-24-21:08:08.jpg", "right/right_2018-11-24-21:08:20.jpg", "right/right_2018-11-24-21:06:35.jpg", "right/right_2018-11-24-21:06:34.jpg", "right/right_2018-11-24-20:50:38.jpg"], "left": ["left/left_2018-11-24-20:51:43.jpg", "left/left_2018-11-24-20:51:42.jpg", "left/left_2018-11-24-20:29:58.jpg", "left/left_2018-11-24-20:51:41.jpg", "left/left_2018-11-24-20:29:59.jpg", "left/left_2018-11-24-20:29:49.jpg", "left/left_2018-11-24-20:51:51.jpg", "left/left_2018-11-24-20:51:45.jpg", "left/left_2018-11-24-20:29:48.jpg", "left/left_2018-11-24-21:08:18.jpg", "left/left_2018-11-24-20:51:46.jpg", "left/left_2018-11-24-20:51:47.jpg", "left/left_2018-11-24-21:08:19.jpg", "left/left_2018-11-24-21:07:13.jpg", "left/left_2018-11-24-21:06:53.jpg", "left/left_2018-11-24-20:51:34.jpg", "left/left_2018-11-24-20:51:21.jpg", "left/left_2018-11-24-21:06:52.jpg", "left/left_2018-11-24-21:07:12.jpg", "left/left_2018-11-24-21:07:38.jpg", "left/left_2018-11-24-20:51:37.jpg", "left/left_2018-11-24-20:51:22.jpg", "left/left_2018-11-24-20:51:36.jpg", "left/left_2018-11-24-21:07:39.jpg", "left/left_2018-11-24-21:07:11.jpg", "left/left_2018-11-24-21:07:15.jpg", "left/left_2018-11-24-21:07:01.jpg", "left/left_2018-11-24-21:06:55.jpg", "left/left_2018-11-24-20:51:32.jpg", "left/left_2018-11-24-20:51:26.jpg", "left/left_2018-11-24-20:51:33.jpg", "left/left_2018-11-24-21:06:54.jpg", "left/left_2018-11-24-21:07:14.jpg", "left/left_2018-11-24-21:07:02.jpg", "left/left_2018-11-24-21:07:16.jpg", "left/left_2018-11-24-20:30:08.jpg", "left/left_2018-11-24-21:06:56.jpg", "left/left_2018-11-24-20:51:25.jpg", "left/left_2018-11-24-20:51:30.jpg", "left/left_2018-11-24-20:51:24.jpg", "left/left_2018-11-24-21:06:57.jpg", "left/left_2018-11-24-20:30:09.jpg", "left/left_2018-11-24-21:07:17.jpg", "left/left_2018-11-24-21:07:26.jpg", "left/left_2018-11-24-20:30:04.jpg", "left/left_2018-11-24-20:30:10.jpg", "left/left_2018-11-24-20:51:29.jpg", "left/left_2018-11-24-20:51:15.jpg", "left/left_2018-11-24-20:51:14.jpg", "left/left_2018-11-24-20:51:28.jpg", "left/left_2018-11-24-20:30:11.jpg", "left/left_2018-11-24-20:30:05.jpg", "left/left_2018-11-24-21:07:25.jpg", "left/left_2018-11-24-21:07:19.jpg", "left/left_2018-11-24-20:30:13.jpg", "left/left_2018-11-24-20:30:07.jpg", "left/left_2018-11-24-21:06:59.jpg", "left/left_2018-11-24-21:06:58.jpg", "left/left_2018-11-24-20:30:06.jpg", "left/left_2018-11-24-20:30:12.jpg", "left/left_2018-11-24-21:07:18.jpg", "left/left_2018-11-24-21:07:24.jpg", "left/left_2018-11-24-21:07:20.jpg", "left/left_2018-11-24-20:30:02.jpg", "left/left_2018-11-24-20:51:13.jpg", "left/left_2018-11-24-20:51:12.jpg", "left/left_2018-11-24-20:30:03.jpg", "left/left_2018-11-24-21:07:21.jpg", "left/left_2018-11-24-21:07:23.jpg", "left/left_2018-11-24-21:07:37.jpg", "left/left_2018-11-24-20:51:10.jpg", "left/left_2018-11-24-20:51:38.jpg", "left/left_2018-11-24-20:51:39.jpg", "left/left_2018-11-24-20:30:14.jpg", "left/left_2018-11-24-20:30:00.jpg", "left/left_2018-11-24-21:07:36.jpg", "left/left_2018-11-24-21:07:22.jpg", "left/left_2018-11-24-20:29:52.jpg", "left/left_2018-11-24-20:29:46.jpg", "left/left_2018-11-24-21:08:14.jpg", "left/left_2018-11-24-21:08:15.jpg", "left/left_2018-11-24-20:29:47.jpg", "left/left_2018-11-24-20:29:53.jpg", "left/left_2018-11-24-20:29:45.jpg", "left/left_2018-11-24-20:29:51.jpg", "left/left_2018-11-24-21:08:17.jpg", "left/left_2018-11-24-20:51:49.jpg", "left/left_2018-11-24-20:51:48.jpg", "left/left_2018-11-24-20:29:44.jpg", "left/left_2018-11-24-20:29:54.jpg", "left/left_2018-11-24-21:07:43.jpg", "left/left_2018-11-24-21:08:12.jpg", "left/left_2018-11-24-21:08:13.jpg", "left/left_2018-11-24-21:07:42.jpg", "left/left_2018-11-24-20:29:55.jpg", "left/left_2018-11-24-20:29:57.jpg", "left/left_2018-11-24-20:29:43.jpg", "left/left_2018-11-24-21:07:40.jpg", "left/left_2018-11-24-21:07:41.jpg"], "none": ["none/none_2018-11-24-20:30:38.jpg", "none/none_2018-11-24-20:30:39.jpg", "none/none_2018-11-24-20:30:16.jpg", "none/none_2018-11-24-20:30:28.jpg", "none/none_2018-11-24-21:07:45.jpg", "none/none_2018-11-24-21:07:51.jpg", "none/none_2018-11-24-21:08:00.jpg", "none/none_2018-11-24-20:52:33.jpg", "none/none_2018-11-24-20:52:26.jpg", "none/none_2018-11-24-21:08:01.jpg", "none/none_2018-11-24-20:52:32.jpg", "none/none_2018-11-24-21:07:50.jpg", "none/none_2018-11-24-21:07:52.jpg", "none/none_2018-11-24-21:07:46.jpg", "none/none_2018-11-24-20:52:24.jpg", "none/none_2018-11-24-20:52:30.jpg", "none/none_2018-11-24-21:08:03.jpg", "none/none_2018-11-24-20:52:19.jpg", "none/none_2018-11-24-20:52:31.jpg", "none/none_2018-11-24-21:08:02.jpg", "none/none_2018-11-24-20:52:25.jpg", "none/none_2018-11-24-21:07:47.jpg", "none/none_2018-11-24-21:07:53.jpg", "none/none_2018-11-24-20:52:09.jpg", "none/none_2018-11-24-20:52:21.jpg", "none/none_2018-11-24-20:52:34.jpg", "none/none_2018-11-24-20:52:08.jpg", "none/none_2018-11-24-21:07:56.jpg", "none/none_2018-11-24-21:07:54.jpg", "none/none_2018-11-24-20:52:22.jpg", "none/none_2018-11-24-20:52:23.jpg", "none/none_2018-11-24-21:07:55.jpg", "none/none_2018-11-24-21:07:58.jpg", "none/none_2018-11-24-20:52:12.jpg", "none/none_2018-11-24-20:52:06.jpg", "none/none_2018-11-24-20:52:07.jpg", "none/none_2018-11-24-20:52:13.jpg", "none/none_2018-11-24-21:07:59.jpg", "none/none_2018-11-24-20:51:54.jpg", "none/none_2018-11-24-20:52:05.jpg", "none/none_2018-11-24-20:52:11.jpg", "none/none_2018-11-24-20:52:10.jpg", "none/none_2018-11-24-20:52:04.jpg", "none/none_2018-11-24-20:51:55.jpg", "none/none_2018-11-24-20:52:28.jpg", "none/none_2018-11-24-20:52:00.jpg", "none/none_2018-11-24-20:52:14.jpg", "none/none_2018-11-24-20:52:15.jpg", "none/none_2018-11-24-20:52:29.jpg", "none/none_2018-11-24-20:30:41.jpg", "none/none_2018-11-24-20:30:43.jpg", "none/none_2018-11-24-21:07:49.jpg", "none/none_2018-11-24-20:51:52.jpg", "none/none_2018-11-24-20:52:17.jpg", "none/none_2018-11-24-20:52:03.jpg", "none/none_2018-11-24-20:52:02.jpg", "none/none_2018-11-24-20:52:16.jpg", "none/none_2018-11-24-21:07:48.jpg", "none/none_2018-11-24-20:30:42.jpg", "none/none_2018-11-24-20:30:25.jpg", "none/none_2018-11-24-20:30:31.jpg", "none/none_2018-11-24-20:30:19.jpg", "none/none_2018-11-24-20:30:18.jpg", "none/none_2018-11-24-20:30:30.jpg", "none/none_2018-11-24-20:30:24.jpg", "none/none_2018-11-24-20:30:32.jpg", "none/none_2018-11-24-20:30:26.jpg", "none/none_2018-11-24-20:30:27.jpg", "none/none_2018-11-24-20:30:33.jpg", "none/none_2018-11-24-20:30:37.jpg", "none/none_2018-11-24-20:30:23.jpg", "none/none_2018-11-24-20:30:22.jpg", "none/none_2018-11-24-20:30:34.jpg", "none/none_2018-11-24-20:30:35.jpg"]}
+},{}]},{},[1]);

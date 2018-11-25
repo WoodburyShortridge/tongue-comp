@@ -1,5 +1,7 @@
 # Tongue-computer Interface for the browser
 
+This project is for Prof. Jacob's OOP class focusing on non-WIMP("windows, icons, menus, pointer") user interfaces, by Woodbury Shortridge (woodbury.shortridge@tufts.edu) and Jose Lemus (Jose.Lemus@tufts.edu). We worked in collaboration on both the concept and the feasibility testing.
+
 ## Premise
 
 Tongue-computer interfaces are not new, there are many explorations in HCI research using various embedded sensor methods such as infrared, microphones, intraoral electrode arrays or even glossokinetic potential. And, it’s not only fun and games: tongue-computer interfaces can enable severely disabled users such as those with upper body impairments. From browsing the web to flying a drone, the tongue’s dynamic mobility offers wide potential for interaction design.
@@ -22,19 +24,19 @@ Our interface will use the new Tensorflow.js library and a method called “tran
 
 Our greatest technical risk is using Tensorflow.js to build a tongue classifier. Initially it was unknown if we could make reasonable inferences with a simple webcam. To test the feasibility, we created a test JavaScript app. Using Tensorflow.js, the app loads the MobileNet model and a KNN classifier (see `main.js`).
 
-Next, we made a simple OpenCV program in python to collect training images (see `training/camera.py`). This program listens to keypresses and captures images of right, left or no tongue out. The training images are fed into app and added to the image to classifier using KNN.
+Next, we made a simple OpenCV program in python to collect training images (see `training/camera.py`). This program listens to keypresses and captures images of right, left or no tongue out. The training images are fed into app by json data and added to the classifier using KNN.
 
-To test feasibility, the app creates a canvas where the webcam is streamed. Then, with the new model, we classify the each canvas frame. The prediction values are printed to html using the innerText method. We found our methods work reasonably well if there are at least 50 of each type of training images loaded.
+To test feasibility, the app creates a canvas to which the webcam is streamed. Then, with the new model, we classify the each canvas frame. The prediction values are printed to html using the innerText method. We found our methods begin to work reasonably well if there are at least 100 of each type of training images loaded. We plan to continue our feasibility tests with a greater quantity and more diverse images.
 
 ## Demo
 
-Serve from this directory root and visit your localhost.
+Serve from this root directory and visit your localhost.
 
-I prefer to use Node.js, install with `npm install http-server -g` and run `http-server` at directory root.
+I prefer to use Node.js http server, install with `npm install http-server -g` and run `http-server` at directory root.
 
 ### MacOS
 
-MacOS comes with PHP, try `PHP -S localhost:8080`
+MacOS comes with PHP, try `PHP -S localhost:8000`
 
 ### Windows
 
@@ -54,7 +56,7 @@ Build production: `npm run build`
 
 ### Dependencies
 
-Python: https://www.python.org/downloads/
+Python 3: https://www.python.org/downloads/
 
 OpenCV: `pip install opencv-python`
 
@@ -67,3 +69,5 @@ Then, launch the Python program: `python camera.py`
 With this program running, hit the 'r' key to take right tongue photos, the 'l' key to take left tongue photos, the 'n' key to take no tongue photos, and the 'q' key to quit the program.
 
 Images will be saved to their respective folders.
+
+To add new images to the json used to train the app, run `python data.py`

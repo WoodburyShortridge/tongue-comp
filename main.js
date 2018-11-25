@@ -2,6 +2,7 @@ import "@babel/polyfill";
 import * as mobilenetModule from '@tensorflow-models/mobilenet';
 import * as tf from '@tensorflow/tfjs';
 import * as knnClassifier from '@tensorflow-models/knn-classifier';
+import * as data from './training/data.json';
 
 // Number of classes to classify
 const NUM_CLASSES = 3;
@@ -27,15 +28,14 @@ class Main {
     // Add video element to DOM
     document.body.appendChild(this.video);
 
-    // Create training buttons and info texts
+    // Create info texts
     for (let i = 0; i < NUM_CLASSES; i++) {
       const div = document.createElement('div');
       document.body.appendChild(div);
       div.style.marginBottom = '10px';
 
-      // Create info text
       const infoText = document.createElement('span')
-      infoText.innerText = " No examples added";
+      infoText.innerText = "Data loading...";
       div.appendChild(infoText);
       this.infoTexts.push(infoText);
     }
@@ -52,32 +52,21 @@ class Main {
       })
   }
 
-  async bindPage() {
-    this.knn = knnClassifier.create();
-    this.mobilenet = await mobilenetModule.load();
-    // Get image data from video element
-    for (let i = 0; i < NUM_CLASSES; i++) {
+  // reusable method to load img data
+  loadData(dataClass, tfNum) {
+    for (let i = 0; i < dataClass.length; i++) {
       let image = new Image();
-      if (i === 0) {
-        image.src = 'images/LEFT.png';
-      }
-      else if (i === 1) {
-        image.src = 'images/RIGHT.png';
-      }
-      else {
-        image.src = 'images/NONE.png';
-      }
+      image.src = 'training/' + dataClass[i];
       image.width = IMAGE_SIZE;
       image.height = IMAGE_SIZE;
 
       image.addEventListener('load', () => {
-        document.body.appendChild(image);
+        // document.body.appendChild(image);
         let imageTf = tf.fromPixels(image);
         let infer = () => this.mobilenet.infer(imageTf, 'conv_preds');
-        // Train class if one of the buttons is held down
         let logits = infer();
         // Add current image to classifier
-        this.knn.addExample(logits, i)
+        this.knn.addExample(logits, tfNum)
 
         // Dispose image when done
         imageTf.dispose();
@@ -86,6 +75,17 @@ class Main {
         }
       }, false);
     };
+  }
+
+  // async method called from constructor to create classifier, load mobilenet, and data
+  async bindPage() {
+    this.knn = knnClassifier.create();
+    this.mobilenet = await mobilenetModule.load();
+
+    this.loadData(data.right, 0);
+    this.loadData(data.left, 1);
+    this.loadData(data.none, 2)
+
     this.start();
   }
 
@@ -102,6 +102,7 @@ class Main {
     cancelAnimationFrame(this.timer);
   }
 
+  // paint routine
   async animate() {
     if (this.videoPlaying) {
 
@@ -117,9 +118,9 @@ class Main {
         for (let i = 0; i < NUM_CLASSES; i++) {
 
           // The number of examples for each class
-          const exampleCount = this.knn.getClassExampleCount();
+          const count = this.knn.getClassExampleCount();
 
-          // Make the predicted class bold
+          // Make the most predicted class bold
           if (res.classIndex == i) {
             this.infoTexts[i].style.fontWeight = 'bold';
           } else {
@@ -127,8 +128,16 @@ class Main {
           }
 
           // Update info text
-          if (exampleCount[i] > 0) {
-            this.infoTexts[i].innerText = ` ${exampleCount[i]} examples - ${res.confidences[i] * 100}%`
+          if (count[i] > 0) {
+            if (i === 0) {
+              this.infoTexts[i].innerText = `RIGHT: ${count[i]} data loaded - ${res.confidences[i] * 100}%`
+            }
+            if (i === 1) {
+              this.infoTexts[i].innerText = `LEFT: ${count[i]} data loaded - ${res.confidences[i] * 100}%`
+            }
+            if (i === 2) {
+              this.infoTexts[i].innerText = `NONE: ${count[i]} data loaded - ${res.confidences[i] * 100}%`
+            }
           }
         }
       }
