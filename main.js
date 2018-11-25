@@ -2,6 +2,7 @@ import "@babel/polyfill";
 import * as mobilenetModule from '@tensorflow-models/mobilenet';
 import * as tf from '@tensorflow/tfjs';
 import * as knnClassifier from '@tensorflow-models/knn-classifier';
+import * as data from './training/data.json';
 
 // Number of classes to classify
 const NUM_CLASSES = 3;
@@ -55,18 +56,10 @@ class Main {
   async bindPage() {
     this.knn = knnClassifier.create();
     this.mobilenet = await mobilenetModule.load();
-    // Get image data from video element
-    for (let i = 0; i < NUM_CLASSES; i++) {
+
+    for (let i = 0; i < data.right.length; i++) {
       let image = new Image();
-      if (i === 0) {
-        image.src = 'images/LEFT.png';
-      }
-      else if (i === 1) {
-        image.src = 'images/RIGHT.png';
-      }
-      else {
-        image.src = 'images/NONE.png';
-      }
+      image.src = 'training/' + data.right[i];
       image.width = IMAGE_SIZE;
       image.height = IMAGE_SIZE;
 
@@ -74,10 +67,51 @@ class Main {
         document.body.appendChild(image);
         let imageTf = tf.fromPixels(image);
         let infer = () => this.mobilenet.infer(imageTf, 'conv_preds');
-        // Train class if one of the buttons is held down
         let logits = infer();
         // Add current image to classifier
-        this.knn.addExample(logits, i)
+        this.knn.addExample(logits, 0)
+
+        // Dispose image when done
+        imageTf.dispose();
+        if (logits != null) {
+          logits.dispose();
+        }
+      }, false);
+    };
+    for (let i = 0; i < data.left.length; i++) {
+      let image = new Image();
+      image.src = 'training/' + data.left[i];
+      image.width = IMAGE_SIZE;
+      image.height = IMAGE_SIZE;
+
+      image.addEventListener('load', () => {
+        document.body.appendChild(image);
+        let imageTf = tf.fromPixels(image);
+        let infer = () => this.mobilenet.infer(imageTf, 'conv_preds');
+        let logits = infer();
+        // Add current image to classifier
+        this.knn.addExample(logits, 1)
+
+        // Dispose image when done
+        imageTf.dispose();
+        if (logits != null) {
+          logits.dispose();
+        }
+      }, false);
+    };
+    for (let i = 0; i < data.none.length; i++) {
+      let image = new Image();
+      image.src = 'training/' + data.none[i];
+      image.width = IMAGE_SIZE;
+      image.height = IMAGE_SIZE;
+
+      image.addEventListener('load', () => {
+        document.body.appendChild(image);
+        let imageTf = tf.fromPixels(image);
+        let infer = () => this.mobilenet.infer(imageTf, 'conv_preds');
+        let logits = infer();
+        // Add current image to classifier
+        this.knn.addExample(logits, 2)
 
         // Dispose image when done
         imageTf.dispose();
