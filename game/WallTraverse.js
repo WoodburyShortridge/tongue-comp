@@ -4,12 +4,17 @@ var canvas, ctx;
 var x, y;
 
 // Walls
-var walls = []
+//var walls = []
 
 // Ball 
 var ballRad = 10;
 var dx = 2;
-var ballX, ballY;
+
+// controls
+leftMove = false;
+rightMove = false;
+
+
 
 // class Walls
 // An individual obstacle is made with one wall on each side of the screen
@@ -37,31 +42,90 @@ class Ball {
         this.x = x;
         this.y = y;
         this.radius = radius;
+        this.drawBall = this.drawBall.bind(this)
     }
 
     drawBall(){
         ctx.beginPath();
-        ctx.arc(x, y, ballRad, 0, Math.PI*2);
-        ctx.fillStyle = rgb(255, 0, 0);
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+        ctx.fillStyle = "#ff0000";
         ctx.fill();
         ctx.closePath();
     }
 
 }
 
+
 onload = function (){
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d");
     x = canvas.width/2;
-    y = canvas.height - 30;
+    y = 30;
 
-    ballX = (canvas.width - ballRad)/2
+    // Create the ball
+    let ballX = (canvas.width - ballRad)/2;
+    let ballY = 30;
+    let ball = new Ball(ballX, ballY, 10);
+    //ball.drawBall();
 
-
-
-
-
+    // Install callbacks
+	document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
     
+    //var dBall = ball.drawBall;
+    //dBall()
+    //var dBall = ball.drawBall.bind(ball);
+    //dBall();
+    //draw(dBall, []);
+    //var dBall = (() => ball.drawBall());
+    //dBall
+    //ob = (function(){ball.drawBall()});
+    //ob()
+    //var ob = (function(){console.log("Hi")})
+    //var ob = () => console.log("Hi");
+    //draw(ob, []);
 
+    draw(ball.drawBall.bind(ball))
+}
+
+function draw(dBall){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    dBall();
     
+    //ball.drawBall().bind(ball);
+    //ball.drawBall();
+
+    if (rightMove){
+        //ball.x += 2;
+    }
+
+    if (leftMove){
+        //ball.x -= 2;
+    }
+
+    requestAnimationFrame(draw(dBall));
+}
+
+function collisionDetection() {
+}
+
+
+// Keyboard callbacks
+function keyDownHandler(e) {
+	if(e.keyCode == 39) {
+		rightMove = true;
+	}
+	else if(e.keyCode == 37) {
+		leftMove = true;
+	}
+}
+
+function keyUpHandler(e) {
+	if(e.keyCode == 39) {
+		rightMove = false;
+	}
+	else if(e.keyCode == 37) {
+		leftMove = false;
+	}
 }
