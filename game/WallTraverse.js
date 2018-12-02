@@ -16,24 +16,34 @@ var rightMove = false;
 
 
 var ball;
-var drawBall;
+var walls;
+var wall1;
 
 // class Walls
 // An individual obstacle is made with one wall on each side of the screen
 class Walls {
     constructor(x, y, dy, width, height){
-        this.dy = -2
-        this.width = 30
-        this.height = 10
-        this.x = 0
-        this.y = 0
+        this.dy = dy
+        this.width = width// 30
+        this.height = height//10
+        this.x = x
+        this.y = y
+        this.draw = this.draw.bind(this);
     }
 
-    drawWall(wall) {
+    draw() {
         ctx.beginPath();
-        ctx.rect(wall.x, wall.y, wall.width, wall.height)
-
+        ctx.rect(this.x,this.y, this.width, this.height)
+        ctx.fillStyle = "#228B22"
+        ctx.fill()
+        ctx.closePath();
     }
+
+    moveUp() {
+        this.y -= this.dy;
+    }
+
+
 
 }
 
@@ -55,6 +65,14 @@ class Ball {
         ctx.closePath();
     }
 
+    moveRight(){
+        this.x += 2
+    }
+
+    moveLeft(){
+        this.x -= 2
+    }
+
 }
 
 
@@ -69,11 +87,25 @@ onload = function (){
     let ballY = 30;
     ball = new Ball(ballX, ballY, 10);
 
+    // Need walls to respawn themselves when off screen.
+    // Pick some random wall length
+    // Pick some wall position -- right, left
+    // Create a wall
+    let dy = 5;
+    let width = 30;
+    let height = 10;
+    let wallX = canvas.width/2
+    let wallY = canvas.height - height
+
+    wall1 = new Walls(wallX, wallY, dy, width, height);
+    walls = [];
+    walls.push(wall1);
+
     // Install callbacks
 	document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);
     
-    drawBall = ball.draw.bind(ball);
+    //drawBall = ball.draw.bind(ball);
     draw()
 }
 
@@ -82,13 +114,24 @@ function draw(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     ball.draw()
+    //wall1.draw();
+
+    //console.log(wall1)
+    //console.log(walls)
+
+    for (i=0; i < walls.length; i++){
+        //console.log(walls[i]);
+        walls[i].draw();
+        walls[i].moveUp();
+    }
+
 
     if (rightMove){
-        ball.x += 2;
+        ball.moveRight();
     }
 
     if (leftMove){
-        ball.x -= 2;
+        ball.moveLeft();
     }
 
     requestAnimationFrame(draw);
