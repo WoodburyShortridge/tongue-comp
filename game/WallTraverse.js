@@ -3,21 +3,17 @@
 var canvas, ctx;
 var x, y;
 
-// Walls
-//var walls = []
-
-// Ball 
-var ballRad = 10;
-var dx = 2;
-
-// controls
+// Controls
 var leftMove = false;
 var rightMove = false;
 
-
+// Sprites
 var ball;
 var walls;
-var wall1;
+
+// Score
+var metrics;
+var invulnCounter = 0;
 
 // class Walls
 // An individual obstacle is made with one wall on each side of the screen
@@ -63,14 +59,37 @@ class Walls {
         }else{
             this.x = 0
         }
-        this.y = canvas.height + (Math.random() * canvas.height/2);
+        this.y = canvas.height + (Math.random() * canvas.height);
     }
 
 
 
 }
 
+class GameMetrics {
+    constructor(lives){
+        this.lives = lives;
+        this.score = 0;
+    }
 
+    updateScore(){
+        this.score++;
+    }
+
+    decrementLives(){
+        if (this.lives > 0){
+            this.lives--;
+        }
+    }
+
+    draw(){
+        ctx.font = "16px Helvetica";
+        ctx.fillStyle = "#000000";
+        ctx.fillText("Score: " + this.score, 10, 20);
+        ctx.fillText("Lives " + this.lives, 10, 45);
+
+    }
+}
 class Ball {
 
     constructor(x, y, radius) {
@@ -105,7 +124,10 @@ onload = function (){
     x = canvas.width/2;
     y = 30;
 
+    metrics = new GameMetrics(4);
+
     // Create the ball
+    let ballRad = 4;
     let ballX = (canvas.width - ballRad)/2;
     let ballY = 30;
     ball = new Ball(ballX, ballY, 10);
@@ -116,39 +138,25 @@ onload = function (){
     // Create a 'spawn time delay' by picking some random location further
     // off the screen to appear from, takes longer to get back on
     // Create a wall
-/*
-    let dy = 5;
-    //let width = 30
-    let width = (Math.random() * (canvas.width/4)) + canvas.width/3
-    let height = 20;
-    //let wallX = 0; // left wall
-    let wallX = canvas.width - width; //right wall
-    let wallY = canvas.height - height;
-
-    wall1 = new Walls(wallX, wallY, dy, width, height);
-*/
-    let wall1 = new Walls();    
 
     walls = [];
-    walls.push(wall1);
+    for (let i = 0; i < 5; i++){
+        var wall1 = new Walls();
+        walls.push(wall1);
+    }
+
 
     // Install callbacks
 	document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);
     
-    //drawBall = ball.draw.bind(ball);
     draw()
 }
 
 
 function draw(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     ball.draw()
-    //wall1.draw();
-
-    //console.log(wall1)
-    //console.log(walls)
 
     for (i=0; i < walls.length; i++){
         //console.log(walls[i]);
@@ -156,6 +164,9 @@ function draw(){
         walls[i].moveUp();
     }
 
+    metrics.draw();
+
+    collisionDetection()
 
     if (rightMove){
         ball.moveRight();
@@ -168,7 +179,23 @@ function draw(){
     requestAnimationFrame(draw);
 }
 
-function collisionDetection() {
+function collisionDetection () {
+    for(var i = 0; i < walls.length; i++){
+        if(walls[i].x < ball.x && walls[i].x + walls[i].width > ball.x){
+            if(walls[i].y < ball.y && walls[i].y + walls[i].height > ball.y){
+                if(invulnCounter == 0){
+                    console.log("collision");
+                    metrics.decrementLives();
+                    invulnCounter = 100;
+                }
+            }
+        }
+    }
+    
+    if(invulnCounter > 0){
+        invulnCounter--;
+    }
+
 }
 
 
