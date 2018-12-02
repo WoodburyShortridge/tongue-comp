@@ -11,10 +11,12 @@ var ballRad = 10;
 var dx = 2;
 
 // controls
-leftMove = false;
-rightMove = false;
+var leftMove = false;
+var rightMove = false;
 
 
+var ball;
+var drawBall;
 
 // class Walls
 // An individual obstacle is made with one wall on each side of the screen
@@ -42,10 +44,10 @@ class Ball {
         this.x = x;
         this.y = y;
         this.radius = radius;
-        this.drawBall = this.drawBall.bind(this)
+        this.draw = this.draw.bind(this)
     }
 
-    drawBall(){
+    draw(){
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
         ctx.fillStyle = "#ff0000";
@@ -65,46 +67,31 @@ onload = function (){
     // Create the ball
     let ballX = (canvas.width - ballRad)/2;
     let ballY = 30;
-    let ball = new Ball(ballX, ballY, 10);
-    //ball.drawBall();
+    ball = new Ball(ballX, ballY, 10);
 
     // Install callbacks
 	document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);
     
-    //var dBall = ball.drawBall;
-    //dBall()
-    //var dBall = ball.drawBall.bind(ball);
-    //dBall();
-    //draw(dBall, []);
-    //var dBall = (() => ball.drawBall());
-    //dBall
-    //ob = (function(){ball.drawBall()});
-    //ob()
-    //var ob = (function(){console.log("Hi")})
-    //var ob = () => console.log("Hi");
-    //draw(ob, []);
-
-    draw(ball.drawBall.bind(ball))
+    drawBall = ball.draw.bind(ball);
+    draw()
 }
 
-function draw(dBall){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    dBall();
+function draw(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    //ball.drawBall().bind(ball);
-    //ball.drawBall();
+    ball.draw()
 
     if (rightMove){
-        //ball.x += 2;
+        ball.x += 2;
     }
 
     if (leftMove){
-        //ball.x -= 2;
+        ball.x -= 2;
     }
 
-    requestAnimationFrame(draw(dBall));
+    requestAnimationFrame(draw);
 }
 
 function collisionDetection() {
