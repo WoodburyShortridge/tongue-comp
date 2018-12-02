@@ -15,18 +15,7 @@ var walls;
 var metrics;
 var invulnCounter = 0;
 
-// class Walls
-// An individual obstacle is made with one wall on each side of the screen
 class Walls {
-    /*constructor(x, y, dy, width, height){
-        this.dy = dy
-        this.width = width// 30
-        this.height = height//10
-        this.x = x
-        this.y = y
-        this.draw = this.draw.bind(this);
-    }*/
-
     constructor(){
         this.randSpawn();
         this.draw = this.draw.bind(this);
@@ -44,7 +33,7 @@ class Walls {
     moveUp() {
         this.y -= this.dy;
         if(this.y < 0 - this.height){
-            // respawn
+            // Need walls to respawn themselves when off screen.
             console.log("offscreen");
             this.randSpawn();
         }
@@ -52,13 +41,16 @@ class Walls {
 
     randSpawn(){
         this.dy = 5;
+        // Pick some random wall length
         this.width = (Math.random() * (canvas.width/4)) + canvas.width/3;
         this.height = 30;
+        // Pick some wall position -- right, left
         if (Math.random() > 0.5){
             this.x = canvas.width - this.width;
         }else{
             this.x = 0
         }
+        // Create a 'spawn time delay' by picking some location offscreen
         this.y = canvas.height + (Math.random() * canvas.height);
     }
 
@@ -131,13 +123,6 @@ onload = function (){
     let ballX = (canvas.width - ballRad)/2;
     let ballY = 30;
     ball = new Ball(ballX, ballY, 10);
-
-    // Need walls to respawn themselves when off screen.
-    // Pick some random wall length
-    // Pick some wall position -- right, left
-    // Create a 'spawn time delay' by picking some random location further
-    // off the screen to appear from, takes longer to get back on
-    // Create a wall
 
     walls = [];
     for (let i = 0; i < 5; i++){
