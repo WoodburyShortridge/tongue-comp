@@ -9,7 +9,7 @@ import style from './main.css';
 // Number of classes to classify
 const NUM_CLASSES = 2;
 // Webcam and Image size. Must be 227.
-const IMAGE_SIZE = 227;
+const IMAGE_SIZE = 300;
 // K value for KNN
 const TOPK = 10;
 
