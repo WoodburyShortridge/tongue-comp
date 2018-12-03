@@ -1,9 +1,14 @@
+import * as faceapi from 'face-api.js';
 import * as mobilenetModule from '@tensorflow-models/mobilenet';
 import * as tf from '@tensorflow/tfjs';
 import * as knnClassifier from '@tensorflow-models/knn-classifier';
 import * as data from './training/data.json';
 import style from './main.css';
 
+const mtcnnForwardParams = {
+  // limiting the search space to larger faces for webcam detection
+  minFaceSize: 200
+}
 // Number of classes to classify
 const NUM_CLASSES = 3;
 // Webcam and Image size. Must be 227.
@@ -52,40 +57,11 @@ class Main {
       })
   }
 
-  // reusable method to load img data
-  loadData(dataClass, tfNum) {
-    for (let i = 0; i < dataClass.length; i++) {
-      let image = new Image();
-      image.src = 'training/' + dataClass[i];
-      image.width = IMAGE_SIZE;
-      image.height = IMAGE_SIZE;
-
-      image.addEventListener('load', () => {
-        // document.body.appendChild(image);
-        let imageTf = tf.fromPixels(image);
-        let infer = () => this.mobilenet.infer(imageTf, 'conv_preds');
-        let logits = infer();
-        // Add current image to classifier
-        this.knn.addExample(logits, tfNum)
-
-        // Dispose image when done
-        imageTf.dispose();
-        if (logits != null) {
-          logits.dispose();
-        }
-      }, false);
-    };
-  }
-
   // async method called from constructor to create classifier, load mobilenet, and data
   async bindPage() {
     this.knn = knnClassifier.create();
     this.mobilenet = await mobilenetModule.load();
-
-    this.loadData(data.right, 0);
-    this.loadData(data.left, 1);
-    this.loadData(data.none, 2)
-
+    await faceapi.loadMtcnnModel('/weights');
     this.start();
   }
 
@@ -105,6 +81,9 @@ class Main {
   // paint routine
   async animate() {
     if (this.videoPlaying) {
+
+      this.mtcnnResults = await faceapi.mtcnn(this.video, mtcnnForwardParams);
+      console.log(this.mtcnnResults);
 
       const numClasses = this.knn.getNumClasses();
       if (numClasses > 0) {

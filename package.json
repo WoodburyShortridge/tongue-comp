@@ -5,7 +5,9 @@
   "dependencies": {
     "@tensorflow-models/knn-classifier": "^0.2.2",
     "@tensorflow-models/mobilenet": "^0.2.2",
-    "@tensorflow/tfjs": "^0.13.5"
+    "@tensorflow/tfjs": "^0.13.5",
+    "face-api.js": "^0.16.1",
+    "fs": "0.0.1-security"
   },
   "scripts": {
     "start": "webpack-dev-server --watch=true --open",
