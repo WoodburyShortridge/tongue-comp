@@ -27,7 +27,7 @@ import glob
 right = []
 left = []
 none = []
-CASCADE_PATH = "haarcascades/haarcascade_frontalface_default.xml"
+CASCADE_PATH = "haarcascades/mouth.xml"
 face_cascade = cv2.CascadeClassifier(CASCADE_PATH)
 
 cap = cv2.VideoCapture(0)
@@ -57,7 +57,7 @@ def generate(img, path):
 
         faceimg = img[ny:ny+nr, nx:nx+nr]
         lastimg = cv2.resize(faceimg, (227, 227))
-        cv2.imwrite(path, img)
+        cv2.imwrite(path, lastimg)
 
 while(True):
     ret, frame = cap.read()
