@@ -10,6 +10,12 @@ video {
     right: 2rem;
 }
 
+.box {
+    position: absolute;
+    bottom: 0;
+    right: 2rem;
+}
+
 .wrappper {
     display: flex;
     justify-content: center;

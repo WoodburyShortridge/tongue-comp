@@ -32,21 +32,28 @@ class Main {
     this.video.setAttribute('preload', '');
     this.video.setAttribute('loop', '');
     this.video.setAttribute('muted', '');
-
     // Add video element to DOM
     document.body.appendChild(this.video);
 
+    // Create canvas for showing box
+    this.boxCanvas = document.createElement('canvas');
+    this.boxCanvas.setAttribute('class', 'box');
+    this.boxContext = this.boxCanvas.getContext('2d');
+    this.boxCanvas.width  = VIDEO_SIZE;
+    this.boxCanvas.height = VIDEO_SIZE;
+    document.body.appendChild(this.boxCanvas)
+
     this.faceCanvas = document.createElement('canvas');
     this.faceContext = this.faceCanvas.getContext('2d');
-    this.faceCanvas.width  = 227;
-    this.faceCanvas.height = 227;
-    document.body.appendChild(this.faceCanvas)
+    this.faceCanvas.width  = IMG_SIZE;
+    this.faceCanvas.height = IMG_SIZE;
+    // document.body.appendChild(this.faceCanvas)
 
     this.rect = {
-      width: 10,
-      height: 10,
-      x: 10,
-      y: 10
+      width: 100,
+      height: 100,
+      x: 100,
+      y: 100
     }
 
     this.wrapper = document.createElement('div');
@@ -105,7 +112,6 @@ class Main {
   async bindPage() {
     this.knn = knnClassifier.create();
     this.mobilenet = await mobilenetModule.load();
-    this.trackFace();
     this.start();
   }
 
@@ -188,19 +194,41 @@ class Main {
   }
 
   trackFace() {
-    tracking.track(this.video, this.tracker, { camera: true });
-    // update bounding box
-    this.setBox = (rect) => {
-      this.rect.width = rect.width;
-      this.rect.height = rect.height;
-      this.rect.x = rect.x
-      this.rect.y = rect.y
-    }
-    this.tracker.on('track', (event) => {
-      event.data.forEach( (rect) => {
-        this.setBox(rect);
+    if (this.videoPlaying) {
+      let canvas = document.createElement("canvas");
+      canvas.width = this.video.width;
+      canvas.height = this.video.height;
+      canvas.getContext('2d').drawImage(this.video, 0, 0, canvas.width, canvas.height);
+
+      let img = document.createElement("img");
+      img.src = canvas.toDataURL("image/jpeg");
+      img.width = 400;
+      img.height = 400;
+      // document.body.appendChild(img);
+      tracking.track(img, this.tracker);
+      // update bounding box
+      this.setBox = (rect) => {
+        let offset = rect.height / 3;
+
+        this.rect.width = rect.width;
+        this.rect.height = rect.height;
+        this.rect.x = rect.x;
+        this.rect.y = rect.y + offset;
+      }
+
+      this.tracker.on('track', (event) => {
+        event.data.forEach( (rect) => {
+          this.setBox(rect);
+        });
       });
-    });
+    }
+  }
+
+  drawBox() {
+    this.boxContext.clearRect(0, 0, this.video.width, this.video.height);
+    this.boxContext.strokeStyle = '#66ff00';
+    this.boxContext.lineWidth=3;
+    this.boxContext.strokeRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
   }
 
   trimFace() {
@@ -209,7 +237,7 @@ class Main {
     let ctx1  = c1.getContext('2d');
     c1.width  = this.video.width;
     c1.height = this.video.height;
-    ctx1.translate(-this.rect.x, -this.rect.y - this.video.height/4);
+    ctx1.translate(-this.rect.x, -this.rect.y);
     ctx1.drawImage(this.video, 0, 0, this.video.width, this.video.height);
 
     let c2 = document.createElement('canvas');
@@ -263,8 +291,6 @@ class Main {
     copy.height = trimHeight;
     copyContext.putImageData(trimmed, 0, 0);
     this.faceContext.drawImage(copy, 0, 0, IMG_SIZE, IMG_SIZE);
-    // this.faceCanvas.width = IMG_SIZE;
-    // this.faceCanvas.height = IMG_SIZE;
   }
 
   start() {
@@ -273,6 +299,8 @@ class Main {
     }
     this.video.play();
     this.timer = requestAnimationFrame(this.animate.bind(this));
+    // reset bounding/crop box only every second for speed
+    setInterval( () => { this.trackFace(); }, 1000);
     this.trainRight();
   }
 
@@ -287,6 +315,9 @@ class Main {
 
       // trim face with most recent bounding box
       this.trimFace();
+
+      // draw box showing tri,
+      this.drawBox();
 
       // Get image data from video element
       const image = tf.fromPixels(this.faceCanvas);
