@@ -18,7 +18,7 @@ class Game {
     // place canvas
     document.body.appendChild(canvas);
 
-    this.metrics = new GameMetrics(4);
+    this.metrics = new GameMetrics(3);
 
     // Create the ball
     let ballRad = 4;
@@ -32,7 +32,7 @@ class Game {
         this.walls.push(wall);
     }
     // Install callbacks
-	  document.addEventListener("keydown", this.keyDownHandler, false);
+	document.addEventListener("keydown", this.keyDownHandler, false);
     document.addEventListener("keyup", this.keyUpHandler, false);
 
     // start Drawing
@@ -146,7 +146,7 @@ class Walls {
     }
 
     randSpawn(){
-        this.dy = 5;
+        this.dy = 2;
         // Pick some random wall length
         this.width = (Math.random() * (canvas.width/4)) + canvas.width/3;
         this.height = 30;
@@ -172,8 +172,12 @@ class GameMetrics {
     }
 
     decrementLives(){
-        if (this.lives > 0){
+        if (this.lives > 1){
             this.lives--;
+        }else{
+            this.lives--;
+            alert("Game Over")
+            document.reload()
         }
     }
 
@@ -181,7 +185,7 @@ class GameMetrics {
         ctx.font = "16px Helvetica";
         ctx.fillStyle = "#000000";
         ctx.fillText("Score: " + this.score, 10, 20);
-        ctx.fillText("Lives " + this.lives, 10, 45);
+        ctx.fillText("Lives: " + this.lives, 10, 45);
 
     }
 }
