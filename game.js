@@ -8,6 +8,8 @@ const ctx = canvas.getContext("2d");
 const x = canvas.width/2;
 const y = 30;
 
+let frameInterval = 0;
+
 // Controls
 let leftMove = false;
 let rightMove = false;
@@ -27,7 +29,7 @@ class Game {
     this.ball = new Ball(ballX, ballY, 10);
 
     this.walls = [];
-    let numWalls = 4;
+    let numWalls = 0;
     for (let i = 0; i < numWalls; i++){
         let wall = new Walls(i*100);
         this.walls.push(wall);
@@ -47,9 +49,17 @@ class Game {
 
       for (let i=0; i < this.walls.length; i++){
           //console.log(walls[i]);
+          let onscreen = this.walls[i].moveUp();
+          if(!onscreen){
+              this.walls.shift()
+
+          }
           this.walls[i].draw();
-          this.walls[i].moveUp();
+
+          
       }
+
+      this.addWalls();
 
       this.metrics.draw();
 
@@ -63,6 +73,7 @@ class Game {
           this.ball.moveLeft();
       }
 
+      frameInterval++;
       requestAnimationFrame(this.draw);
   }
 
@@ -86,25 +97,13 @@ class Game {
       }
   }
 
-  /*
-  collisionDetection() {
-      for(let i = 0; i < this.walls.length; i++){
-          if(this.walls[i].x < this.ball.x && this.walls[i].x + this.walls[i].width > this.ball.x){
-              if(this.walls[i].y < this.ball.y && this.walls[i].y + this.walls[i].height > this.ball.y){
-                  if(invulnCounter == 0){
-                      console.log("collision");
-                      this.metrics.decrementLives();
-                      invulnCounter = 100;
-                  }
-              }
-          }
-      }
-
-      if(invulnCounter > 0){
-          invulnCounter--;
+  addWalls(){
+      if(frameInterval % 150 == 0){
+          this.walls.push(new Walls(0))
+          frameInterval = 0;
       }
   }
-  */
+
 
   moveRight(e) {
     if (e === true) {
@@ -165,16 +164,16 @@ class Walls {
         if(this.y < 0 - this.height){
             // Need walls to respawn themselves when off screen.
             console.log("offscreen");
-            this.randSpawn();
+            return false
+            //this.randSpawn();
         }
+        return true
     }
 
     collision(objectX, objectY){
         console.log("Collision called")
         if(objectX >= this.x && objectX <= this.x + this.width){
-            //if(objectY >= this.y && objectY <= this.y + this.height){
             if(this.y < objectY && this.y + this.height > objectY){
-                //this.walls[i].y < this.ball.y && this.walls[i].y + this.walls[i].height > this.ball.y
                 console.log("Collision occurred")
                 return true
             }
@@ -193,12 +192,8 @@ class Walls {
         }else{
             this.x = 0
         }
-        
-        // Create a 'spawn time delay' by picking some location offscreen
-        this.y = this.spawnY
-        console.log(this.spawnY)
-        //this.spawnY = canvas.height + (Math.random() * canvas.height);
 
+        this.y = this.spawnY
     }
 }
 
