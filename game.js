@@ -29,11 +29,7 @@ class Game {
     this.ball = new Ball(ballX, ballY, 10);
 
     this.walls = [];
-    let numWalls = 0;
-    for (let i = 0; i < numWalls; i++){
-        let wall = new Walls(i*100);
-        this.walls.push(wall);
-    }
+
     // Install callbacks
 	document.addEventListener("keydown", this.keyDownHandler, false);
     document.addEventListener("keyup", this.keyUpHandler, false);
@@ -48,15 +44,12 @@ class Game {
       this.ball.draw()
 
       for (let i=0; i < this.walls.length; i++){
-          //console.log(walls[i]);
           let onscreen = this.walls[i].moveUp();
           if(!onscreen){
               this.walls.shift()
 
           }
           this.walls[i].draw();
-
-          
       }
 
       this.addWalls();
@@ -82,10 +75,6 @@ class Game {
           if(invulnCounter == 0){
               let collided = this.walls[i].collision(this.ball.x, this.ball.y);
               if (collided){
-                  console.log("collision");
-                  console.log(this.walls[i].y)
-                  console.log(this.walls[i].height)
-                  console.log(this.ball.y)
                   this.metrics.decrementLives();
                   invulnCounter = 100;
               }
@@ -98,7 +87,7 @@ class Game {
   }
 
   addWalls(){
-      if(frameInterval % 150 == 0){
+      if(frameInterval % 125 == 0){
           this.walls.push(new Walls(0))
           frameInterval = 0;
       }
@@ -162,10 +151,8 @@ class Walls {
     moveUp() {
         this.y -= this.dy;
         if(this.y < 0 - this.height){
-            // Need walls to respawn themselves when off screen.
-            console.log("offscreen");
+            // no longer respawning walls, report false when offscreen
             return false
-            //this.randSpawn();
         }
         return true
     }
@@ -184,7 +171,7 @@ class Walls {
     randSpawn(){
         this.dy = 2;
         // Pick some random wall length
-        this.width = (Math.random() * (canvas.width/4)) + canvas.width/3;
+        this.width = (Math.random() * (canvas.width/3)) + canvas.width/3;
         this.height = 30;
         // Pick some wall position -- right, left
         if (Math.random() > 0.5){
