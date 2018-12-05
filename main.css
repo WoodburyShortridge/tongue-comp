@@ -5,13 +5,13 @@ body {
 }
 
 video {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     right: 2rem;
 }
 
 .box {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     right: 2rem;
 }
@@ -67,4 +67,12 @@ div.tongue.loading {
 div.score {
     display: flex;
     justify-content: center;
+}
+
+canvas.game {
+  background: #ffeb3b57;
+  margin-left: 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 5px 5px 20px 2px rgba(0,0,0,.25);
+  margin-top: 2rem;
 }

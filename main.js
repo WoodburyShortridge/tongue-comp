@@ -4,6 +4,7 @@ import * as knnClassifier from '@tensorflow-models/knn-classifier';
 import 'tracking';
 import 'tracking/build/data/face-min';
 import style from './main.css';
+import Game from './game.js'
 
 // Number of classes to classify
 const NUM_CLASSES = 2;
@@ -22,6 +23,7 @@ class Main {
     this.training = -1;
     this.playing = false;
     this.videoPlaying = false;
+    this.game = null;
 
     // Create video element that will contain the webcam image
     this.video = document.createElement('video');
@@ -191,6 +193,7 @@ class Main {
     this.tongue.setAttribute('class', 'play tongue');
     this.count.innerText = '';
     this.playing = true;
+    this.game = new Game;
   }
 
   trackFace() {
@@ -348,8 +351,22 @@ class Main {
 
           if (res.confidences[i] > 0.8 && this.playing) {
             this.infoTexts[i].style.fontWeight = 'bold';
-          } else {
+            // Control Game
+            if (i === 0) {
+              this.game.moveRight(true);
+            }
+            else if (i === 1) {
+              this.game.moveLeft(true);
+            }
+          } else if (this.playing) {
             this.infoTexts[i].style.fontWeight = 'normal';
+            // Stop control Game
+            if (i === 0) {
+              this.game.moveRight(false);
+            }
+            else if (i === 1) {
+              this.game.moveLeft(false);
+            }
           }
 
           // Update info text
