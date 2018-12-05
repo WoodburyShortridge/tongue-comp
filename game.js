@@ -75,7 +75,10 @@ class Game {
           if(invulnCounter == 0){
               let collided = this.walls[i].collision(this.ball.x, this.ball.y);
               if (collided){
-                  this.metrics.decrementLives();
+                  let continueGame = this.metrics.decrementLives();
+                  if(!continueGame){
+                      this.reset()
+                  }
                   invulnCounter = 100;
               }
           }
@@ -132,6 +135,18 @@ class Game {
   		leftMove = false;
   	}
   }
+
+  reset(){
+    frameInterval = 0;
+
+    // Controls
+    leftMove = false;
+    rightMove = false;
+    invulnCounter = 0;
+    this.metrics = new GameMetrics(3);
+    this.walls = [];
+  }
+
 }
 
 class Walls {
@@ -200,10 +215,12 @@ class GameMetrics {
     decrementLives(){
         if (this.lives > 1){
             this.lives--;
+            return true
         }else{
             this.lives--;
             alert("Game Over\nScore: " + this.score)
-            document.location.reload()
+            return false
+            //document.location.reload()
         }
     }
 
