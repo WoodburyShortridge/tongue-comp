@@ -177,12 +177,12 @@ class GameMetrics {
         }else{
             this.lives--;
             alert("Game Over")
-            document.reload()
+            document.location.reload()
         }
     }
 
     draw(){
-        ctx.font = "16px Helvetica";
+        ctx.font = "bold 16px Helvetica";
         ctx.fillStyle = "#000000";
         ctx.fillText("Score: " + this.score, 10, 20);
         ctx.fillText("Lives: " + this.lives, 10, 45);
