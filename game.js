@@ -23,12 +23,13 @@ class Game {
     // Create the ball
     let ballRad = 4;
     let ballX = (canvas.width - ballRad)/2;
-    let ballY = 30;
+    let ballY = 60;
     this.ball = new Ball(ballX, ballY, 10);
 
     this.walls = [];
-    for (let i = 0; i < 5; i++){
-        let wall = new Walls();
+    let numWalls = 4;
+    for (let i = 0; i < numWalls; i++){
+        let wall = new Walls(i*100);
         this.walls.push(wall);
     }
     // Install callbacks
@@ -65,6 +66,27 @@ class Game {
       requestAnimationFrame(this.draw);
   }
 
+  collisionDetection(){
+      for(let i = 0; i < this.walls.length; i++){
+          if(invulnCounter == 0){
+              let collided = this.walls[i].collision(this.ball.x, this.ball.y);
+              if (collided){
+                  console.log("collision");
+                  console.log(this.walls[i].y)
+                  console.log(this.walls[i].height)
+                  console.log(this.ball.y)
+                  this.metrics.decrementLives();
+                  invulnCounter = 100;
+              }
+          }
+      }
+
+      if(invulnCounter > 0){
+          invulnCounter--;
+      }
+  }
+
+  /*
   collisionDetection() {
       for(let i = 0; i < this.walls.length; i++){
           if(this.walls[i].x < this.ball.x && this.walls[i].x + this.walls[i].width > this.ball.x){
@@ -82,6 +104,7 @@ class Game {
           invulnCounter--;
       }
   }
+  */
 
   moveRight(e) {
     if (e === true) {
@@ -122,11 +145,12 @@ class Game {
 }
 
 class Walls {
-    constructor(){
+    constructor(spawnY){
+        //this.spawnY = canvas.height + (Math.random() * canvas.height);
+        this.spawnY = canvas.height + spawnY;
         this.randSpawn();
         this.draw = this.draw.bind(this);
     }
-
 
     draw() {
         ctx.beginPath();
@@ -145,6 +169,19 @@ class Walls {
         }
     }
 
+    collision(objectX, objectY){
+        console.log("Collision called")
+        if(objectX >= this.x && objectX <= this.x + this.width){
+            //if(objectY >= this.y && objectY <= this.y + this.height){
+            if(this.y < objectY && this.y + this.height > objectY){
+                //this.walls[i].y < this.ball.y && this.walls[i].y + this.walls[i].height > this.ball.y
+                console.log("Collision occurred")
+                return true
+            }
+        }
+        return false
+    }
+
     randSpawn(){
         this.dy = 2;
         // Pick some random wall length
@@ -156,10 +193,15 @@ class Walls {
         }else{
             this.x = 0
         }
+        
         // Create a 'spawn time delay' by picking some location offscreen
-        this.y = canvas.height + (Math.random() * canvas.height);
+        this.y = this.spawnY
+        console.log(this.spawnY)
+        //this.spawnY = canvas.height + (Math.random() * canvas.height);
+
     }
 }
+
 
 class GameMetrics {
     constructor(lives){
@@ -208,13 +250,13 @@ class Ball {
     }
 
     moveRight(){
-        if(this.x < canvas.width){
+        if(this.x < canvas.width - this.radius){
             this.x += 5
         }
     }
 
     moveLeft(){
-        if(this.x > 0){
+        if(this.x > 0 + this.radius){
         this.x -= 5
         }
     }
