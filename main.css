@@ -1,3 +1,78 @@
 body {
   background-color: #2196f34a;
+  margin: 0;
+  font-family: sans-serif;
+}
+
+video {
+    position: fixed;
+    bottom: 0;
+    right: 2rem;
+}
+
+.box {
+    position: fixed;
+    bottom: 0;
+    right: 2rem;
+}
+
+.wrappper {
+    display: flex;
+    justify-content: center;
+    margin-top: 4rem;
+}
+
+h1 {
+  font-size: 4rem;
+  margin: 0;
+}
+
+
+div.count {
+  font-size: 10rem;
+  display: flex;
+  justify-content: center;
+}
+
+div.count.train {
+  animation: spin 1000ms linear infinite;
+}
+
+div.tongue {
+  font-size: 4rem;
+  margin-left: 4rem;
+}
+
+div.left.tongue {
+    transform: rotate(90deg);
+}
+
+div.right.tongue {
+  transform: rotate(-90deg);
+}
+
+div.play.tongue {
+  transform: rotate(0deg);
+}
+
+div.tongue.loading {
+    animation: spin 1000ms linear infinite;
+}
+
+@keyframes spin {
+    from {transform:rotate(0deg);}
+    to {transform:rotate(360deg);}
+}
+
+div.score {
+    display: flex;
+    justify-content: center;
+}
+
+canvas.game {
+  background: #ffeb3b57;
+  margin-left: 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 5px 5px 20px 2px rgba(0,0,0,.25);
+  margin-top: 2rem;
 }
