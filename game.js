@@ -8,6 +8,8 @@ const ctx = canvas.getContext("2d");
 const x = canvas.width/2;
 const y = 30;
 
+let frameInterval = 0;
+
 // Controls
 let leftMove = false;
 let rightMove = false;
@@ -18,21 +20,18 @@ class Game {
     // place canvas
     document.body.appendChild(canvas);
 
-    this.metrics = new GameMetrics(4);
+    this.metrics = new GameMetrics(3);
 
     // Create the ball
     let ballRad = 4;
     let ballX = (canvas.width - ballRad)/2;
-    let ballY = 30;
+    let ballY = 60;
     this.ball = new Ball(ballX, ballY, 10);
 
     this.walls = [];
-    for (let i = 0; i < 5; i++){
-        let wall = new Walls();
-        this.walls.push(wall);
-    }
+
     // Install callbacks
-	  document.addEventListener("keydown", this.keyDownHandler, false);
+	document.addEventListener("keydown", this.keyDownHandler, false);
     document.addEventListener("keyup", this.keyUpHandler, false);
 
     // start Drawing
@@ -45,10 +44,15 @@ class Game {
       this.ball.draw()
 
       for (let i=0; i < this.walls.length; i++){
-          //console.log(walls[i]);
+          let onscreen = this.walls[i].moveUp();
+          if(!onscreen){
+              this.walls.shift()
+
+          }
           this.walls[i].draw();
-          this.walls[i].moveUp();
       }
+
+      this.addWalls();
 
       this.metrics.draw();
 
@@ -62,18 +66,20 @@ class Game {
           this.ball.moveLeft();
       }
 
+      frameInterval++;
       requestAnimationFrame(this.draw);
   }
 
-  collisionDetection() {
+  collisionDetection(){
       for(let i = 0; i < this.walls.length; i++){
-          if(this.walls[i].x < this.ball.x && this.walls[i].x + this.walls[i].width > this.ball.x){
-              if(this.walls[i].y < this.ball.y && this.walls[i].y + this.walls[i].height > this.ball.y){
-                  if(invulnCounter == 0){
-                      console.log("collision");
-                      this.metrics.decrementLives();
-                      invulnCounter = 100;
+          if(invulnCounter == 0){
+              let collided = this.walls[i].collision(this.ball.x, this.ball.y);
+              if (collided){
+                  let continueGame = this.metrics.decrementLives();
+                  if(!continueGame){
+                      this.reset()
                   }
+                  invulnCounter = 100;
               }
           }
       }
@@ -82,6 +88,16 @@ class Game {
           invulnCounter--;
       }
   }
+
+  addWalls(){
+      if(frameInterval % 120 == 0){
+        this.walls.push(new Walls(0))
+        frameInterval = 0;
+        this.metrics.updateScore();
+
+      }
+  }
+
 
   moveRight(e) {
     if (e === true) {
@@ -119,14 +135,27 @@ class Game {
   		leftMove = false;
   	}
   }
+
+  reset(){
+    frameInterval = 0;
+
+    // Controls
+    leftMove = false;
+    rightMove = false;
+    invulnCounter = 0;
+    this.metrics = new GameMetrics(3);
+    this.walls = [];
+  }
+
 }
 
 class Walls {
-    constructor(){
+    constructor(spawnY){
+        //this.spawnY = canvas.height + (Math.random() * canvas.height);
+        this.spawnY = canvas.height + spawnY;
         this.randSpawn();
         this.draw = this.draw.bind(this);
     }
-
 
     draw() {
         ctx.beginPath();
@@ -139,16 +168,27 @@ class Walls {
     moveUp() {
         this.y -= this.dy;
         if(this.y < 0 - this.height){
-            // Need walls to respawn themselves when off screen.
-            console.log("offscreen");
-            this.randSpawn();
+            // no longer respawning walls, report false when offscreen
+            return false
         }
+        return true
+    }
+
+    collision(objectX, objectY){
+        console.log("Collision called")
+        if(objectX >= this.x && objectX <= this.x + this.width){
+            if(this.y < objectY && this.y + this.height > objectY){
+                console.log("Collision occurred")
+                return true
+            }
+        }
+        return false
     }
 
     randSpawn(){
-        this.dy = 5;
+        this.dy = 2;
         // Pick some random wall length
-        this.width = (Math.random() * (canvas.width/4)) + canvas.width/3;
+        this.width = (Math.random() * (canvas.width/3)) + canvas.width/3;
         this.height = 30;
         // Pick some wall position -- right, left
         if (Math.random() > 0.5){
@@ -156,10 +196,11 @@ class Walls {
         }else{
             this.x = 0
         }
-        // Create a 'spawn time delay' by picking some location offscreen
-        this.y = canvas.height + (Math.random() * canvas.height);
+
+        this.y = this.spawnY
     }
 }
+
 
 class GameMetrics {
     constructor(lives){
@@ -172,16 +213,22 @@ class GameMetrics {
     }
 
     decrementLives(){
-        if (this.lives > 0){
+        if (this.lives > 1){
             this.lives--;
+            return true
+        }else{
+            this.lives--;
+            alert("Game Over\nScore: " + this.score)
+            return false
+            //document.location.reload()
         }
     }
 
     draw(){
-        ctx.font = "16px Helvetica";
+        ctx.font = "bold 16px Helvetica";
         ctx.fillStyle = "#000000";
         ctx.fillText("Score: " + this.score, 10, 20);
-        ctx.fillText("Lives " + this.lives, 10, 45);
+        ctx.fillText("Lives: " + this.lives, 10, 45);
 
     }
 }
@@ -204,11 +251,15 @@ class Ball {
     }
 
     moveRight(){
-        this.x += 5
+        if(this.x < canvas.width - this.radius){
+            this.x += 5
+        }
     }
 
     moveLeft(){
+        if(this.x > 0 + this.radius){
         this.x -= 5
+        }
     }
 }
 
