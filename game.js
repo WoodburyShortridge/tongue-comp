@@ -87,9 +87,11 @@ class Game {
   }
 
   addWalls(){
-      if(frameInterval % 125 == 0){
-          this.walls.push(new Walls(0))
-          frameInterval = 0;
+      if(frameInterval % 120 == 0){
+        this.walls.push(new Walls(0))
+        frameInterval = 0;
+        this.metrics.updateScore();
+
       }
   }
 
@@ -200,7 +202,7 @@ class GameMetrics {
             this.lives--;
         }else{
             this.lives--;
-            alert("Game Over")
+            alert("Game Over\nScore: " + this.score)
             document.location.reload()
         }
     }
