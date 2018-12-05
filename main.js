@@ -389,4 +389,5 @@ class Main {
   }
 }
 
-window.addEventListener('load', () => new Main());
+//window.addEventListener('load', () => new Main());
+window.addEventListener('load', () => new Game)
