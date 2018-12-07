@@ -1,5 +1,6 @@
 import Interface from './interface.js'
 import Game from './game.js'
+import style from './main.css';
 
 class Main {
   constructor() {

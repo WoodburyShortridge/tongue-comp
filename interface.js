@@ -3,7 +3,6 @@ import * as tf from '@tensorflow/tfjs';
 import * as knnClassifier from '@tensorflow-models/knn-classifier';
 import 'tracking';
 import 'tracking/build/data/face-min';
-import style from './main.css';
 
 // classes
 const NUM_CLASSES = 2;
