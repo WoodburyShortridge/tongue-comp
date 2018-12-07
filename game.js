@@ -16,7 +16,8 @@ let rightMove = false;
 let invulnCounter = 0;
 
 class Game {
-  constructor() {
+  constructor(parent) {
+    this.parent = parent;
     // place canvas
     document.body.appendChild(canvas);
 
@@ -31,7 +32,7 @@ class Game {
     this.walls = [];
 
     // Install callbacks
-	document.addEventListener("keydown", this.keyDownHandler, false);
+	  document.addEventListener("keydown", this.keyDownHandler, false);
     document.addEventListener("keyup", this.keyUpHandler, false);
 
     // start Drawing
