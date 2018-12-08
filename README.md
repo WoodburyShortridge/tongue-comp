@@ -12,7 +12,7 @@ We propose a new, hardware-independent, approach to tongue-computer interaction.
 
 ### Prototype:
 
-![protoype image](https://raw.githubusercontent.com/WoodburyShortridge/tongue-comp/master/prototype.png)
+![protoype image](prototype.png)
 
 ## Technologies
 
@@ -42,7 +42,7 @@ Our design uses the graphical layout as a way to communicate information to the 
 <b>Training:</b>
 ![training screen shot](train_left.png)
 
-<Game Play:</b>
+<b>Game Play:</b>
 ![game screen shot](game_play.png)
 
 ## Demo
